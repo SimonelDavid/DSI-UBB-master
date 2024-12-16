@@ -21,7 +21,7 @@ if [ -z "$TOMCAT_POD" ]; then
   exit 1
 fi
 
-TOMCAT_TO_WILDFLY_RESPONSE=$(kubectl exec -n $NAMESPACE $TOMCAT_POD -- curl -s http://wildfly-service.tpjad-hw1.svc.cluster.local:8081/servlet-wildfly-1.0-SNAPSHOT/wildfly)
+TOMCAT_TO_WILDFLY_RESPONSE=$(kubectl exec -n $NAMESPACE $TOMCAT_POD -- curl -s http://wildfly-service.tpjad-hw1.svc.cluster.local:8082/servlet-wildfly-1.0-SNAPSHOT/wildfly)
 
 if [ -z "$TOMCAT_TO_WILDFLY_RESPONSE" ]; then
   echo "❌ No response received from WildFly. Check the WildFly pod or service."
@@ -38,7 +38,7 @@ if [ -z "$JETTY_POD" ]; then
   exit 1
 fi
 
-WILDFLY_TO_TOMCAT_RESPONSE=$(kubectl exec -n $NAMESPACE $JETTY_POD -- curl -s http://tomcat-service.tpjad-hw1.svc.cluster.local:8080/servlet-tomcat/tomcat)
+WILDFLY_TO_TOMCAT_RESPONSE=$(kubectl exec -n $NAMESPACE $JETTY_POD -- curl -s http://tomcat-service.tpjad-hw1.svc.cluster.local:8081/servlet-tomcat/tomcat)
 
 if [ -z "$WILDFLY_TO_TOMCAT_RESPONSE" ]; then
   echo "❌ No response received from Tomcat. Check the Tomcat pod or service."
@@ -48,7 +48,7 @@ fi
 
 # Testing Jetty → WildFly communication
 echo "🌐 Testing communication from WildFly to Jetty via Tomcat..."
-WILDFLY_TO_JETTY_RESPONSE=$(kubectl exec -n $NAMESPACE $TOMCAT_POD -- curl -s http://jetty-service.tpjad-hw1.svc.cluster.local:8082/servlet-jetty/jetty)
+WILDFLY_TO_JETTY_RESPONSE=$(kubectl exec -n $NAMESPACE $TOMCAT_POD -- curl -s http://jetty-service.tpjad-hw1.svc.cluster.local:8080/servlet-jetty/jetty)
 
 if [ -z "$WILDFLY_TO_JETTY_RESPONSE" ]; then
   echo "❌ No response received from Jetty. Check the Jetty pod or service."

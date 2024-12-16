@@ -10,7 +10,7 @@ public class TomcatServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String wildflyUrl = "http://wildfly-service.tpjad-hw1.svc.cluster.local:8081/servlet-wildfly-1.0-SNAPSHOT/wildfly";
+        String wildflyUrl = "http://wildfly-service.tpjad-hw1.svc.cluster.local:8082/servlet-wildfly-1.0-SNAPSHOT/wildfly";
 
         String wildflyResponse = HttpRequestHelper.sendGet(wildflyUrl);
 

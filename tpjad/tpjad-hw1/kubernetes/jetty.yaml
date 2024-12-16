@@ -30,6 +30,6 @@ spec:
     app: jetty
   ports:
     - protocol: TCP
-      port: 8082
+      port: 8080
       targetPort: 8080
   type: ClusterIP

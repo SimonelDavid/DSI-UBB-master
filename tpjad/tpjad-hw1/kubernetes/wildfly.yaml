@@ -30,6 +30,6 @@ spec:
     app: wildfly
   ports:
     - protocol: TCP
-      port: 8081
+      port: 8082
       targetPort: 8080
   type: ClusterIP

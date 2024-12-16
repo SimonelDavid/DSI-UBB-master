@@ -1,108 +1,139 @@
 # TPJAD-HW1: Aplicație Containerizată cu Tomcat, WildFly și Jetty
 
-## Informații despre student
-- **Nume:** David Simonel-Olimpiu
+- **Student:** David Simonel-Olimpiu
 - **Grupa:** 244
 
 ---
 
-## Descrierea proiectului
+## Introducere
 
-Acest proiect propune o arhitectură distribuită containerizată care folosește **Tomcat**, **WildFly** și **Jetty** pentru a demonstra comunicarea între servicii într-un mediu orchestrator Kubernetes. Fiecare server găzduiește o aplicație modulară bazată pe servlet-uri Java, care gestionează fluxul cererilor HTTP. Soluția se concentrează pe interoperabilitate, scalabilitate și extensibilitate.
-
----
-
-## Arhitectura și fluxul aplicației
-
-1. **Tomcat**: Punct de intrare pentru utilizator, preia cererile și le transmite către **WildFly**.
-2. **WildFly**: Primește cereri de la Tomcat, comunică cu **Jetty** pentru procesarea suplimentară și trimite răspunsul.
-3. **Jetty**: Răspunde cererilor primite de la WildFly și furnizează răspunsul final.
-
-Fluxul aplicației este:  
-**Client** → **Tomcat** → **WildFly** → **Jetty** → **Răspuns final către client**
+Scopul acestui proiect este să demonstreze utilizarea tehnologiilor moderne precum **Docker** și **Kubernetes** pentru a dezvolta, containeriza și orchestra o aplicație distribuită bazată pe trei servere de aplicații: **Jetty**, **Tomcat** și **WildFly**. Acest sistem modular implementează un flux în care **Jetty** este principalul server ce inițiază cereri către **Tomcat**, care acționează ca un intermediar pentru a primi date de la **WildFly**.
 
 ---
 
-## Descrierea obiectelor folosite
+## Arhitectura generală
 
-### 1. Servleturi
-Fiecare server implementează un servlet care gestionează cereri și răspunsuri. Protocoalele HTTP sunt folosite pentru comunicare între module.
+Aplicația este organizată în trei module distincte, fiecare reprezentând un server containerizat, care colaborează pentru a procesa cererile utilizatorului:
 
-#### Prototipuri:
-- **TomcatServlet**:
-    - **Parametri:**
-        - `HttpServletRequest req` – cererea HTTP.
-        - `HttpServletResponse resp` – răspunsul HTTP.
-    - **Return:** Void, însă scrie răspunsul în fluxul de ieșire al obiectului `HttpServletResponse`.
-    - **Excepții aruncate:**
-        - `IOException` – în cazul erorilor de scriere.
-        - `ServletException` – pentru erori legate de servlet.
+1. **Jetty**: Punctul de intrare principal al aplicației. Primește cererile utilizatorului și apelează **Tomcat** pentru a obține răspunsuri.
+2. **Tomcat**: Acționează ca intermediar. Primește cereri de la **Jetty**, trimite cereri către **WildFly** și returnează răspunsul.
+3. **WildFly**: Scrie un mesaj static.
 
-- **WildFlyServlet** și **JettyServlet**: Structură similară cu `TomcatServlet`.
+Fluxul principal:  
+**Client → Jetty → Tomcat → WildFly**
 
 ---
 
-### 2. Clasa utilitară pentru cereri HTTP
-Aceasta gestionează comunicarea dintre servere folosind metoda HTTP GET.
+## Implementare și tehnologii
 
-#### Prototipuri:
-- **HttpRequestHelper.sendGet(String url): String**
-    - **Parametri:**
-        - `url` – URL-ul resursei la care se face cererea.
-    - **Return:**
-        - Răspunsul ca șir de caractere.
-    - **Excepții aruncate:**
-        - `IOException` – pentru erori de conexiune.
-        - `MalformedURLException` – dacă URL-ul este invalid.
+### Containerizare cu Docker
 
----
+**Docker** este folosit pentru a crea containere izolate pentru fiecare server. Fiecare modul al aplicației are un fișier `Dockerfile`, unde se specifică:
+- Imaginea de bază corespunzătoare serverului (e.g., `jetty:11.0`, `tomcat:9.0`, `wildfly:26.1`).
+- Locația fișierului `.war` generat de Maven și configurarea sa în directorul potrivit pentru server.
+- Setările necesare pentru porturi și alte configurații.
 
-### 3. Configurații container și Kubernetes
-Fiecare server are o configurație dedicată definită prin fișiere Docker și Kubernetes YAML.
+Fișierele `Dockerfile` pot fi găsite în directorul `Docker/`.
 
-#### Prototipuri:
-- Fișiere **Dockerfile** configurează:
-    - Imaginea de bază (e.g., `tomcat:9.0`, `wildfly:26.1`, `jetty:11.0`).
-    - Copierea fișierelor WAR în directoarele corespunzătoare.
-    - Expunerea porturilor.
+### Orchestrare cu Kubernetes
 
-- Fișiere **Kubernetes YAML** configurează:
-    - **Deployment:** pentru lansarea modulelor în Kubernetes.
-    - **Service:** pentru expunerea fiecărui modul în rețeaua internă a clusterului.
+**Kubernetes** este utilizat pentru a orchestra containerele și a asigura conectivitatea dintre ele. Fiecare modul are definit:
+1. **Deployment**: Asigură lansarea și gestionarea podurilor pentru fiecare server de aplicații. Aceasta include specificarea imaginii Docker și a numărului de replici.
+2. **Service**: Expune fiecare modul în rețeaua internă a Kubernetes, folosind DNS pentru identificare și porturi pentru comunicare.
+
+De exemplu:
+- **Jetty** este configurat să ruleze pe portul 8080 și să fie accesibil la adresa `jetty-service.tpjad-hw1.svc.cluster.local`.
+- **Tomcat** este configurat să ruleze pe portul 8081 și să fie accesibil la adresa `tomcat-service.tpjad-hw1.svc.cluster.local`.
+- **WildFly** rulează pe portul 8082 și este accesibil la adresa `wildfly-service.tpjad-hw1.svc.cluster.local`.
+
+Fișierele de configurare Kubernetes sunt disponibile în directorul `kubernetes/`.
 
 ---
 
-## Context operațional și testare
+## Codul aplicației
 
-### Context de rulare
-Soluția este operațională în următoarele condiții:
-1. Toate resursele sunt configurate și aplicate corect în Kubernetes.
-2. Fiecare imagine Docker este construită fără erori și împinsă în registry-ul Docker local sau Minikube.
-3. Rularea scripturilor de testare validează funcționalitatea serviciilor și comunicarea între ele.
+### Jetty
+**Jetty** este responsabil pentru inițierea cererilor în cadrul aplicației. Servletul său principal trimite o cerere către **Tomcat**, care, la rândul său, apelează **WildFly**. Codul servletului este disponibil în `src/main/java/com/example/jetty/JettyServlet.java`.
+
+#### Prototipul metodei servletului:
+- `protected void doGet(HttpServletRequest req, HttpServletResponse resp)`
+    - Parametri:
+        - `req` - Obiect care conține detalii despre cererea HTTP primită.
+        - `resp` - Obiect care permite generarea răspunsului HTTP.
+    - Return: Void.
+    - Excepții:
+        - `ServletException` - Eroare în procesarea cererii.
+        - `IOException` - Eroare de scriere a răspunsului.
+
+În servlet, clasa utilitară `HttpRequestHelper` este folosită pentru a trimite cereri HTTP către **Tomcat**. Aceasta este implementată în `src/main/java/com/example/jetty/HttpRequestHelper.java`.
+
+#### Exemple de răspunsuri:
+- Cerere reușită:  
+  Utilizatorul primește un mesaj compus care arată colaborarea între module:
+```
+Jetty received a message from Tomcat: 
+And Tomcat received a message from WildFly: Hello, all! This is WildFly :)
+```
+### Tomcat
+**Tomcat** servește ca un intermediar între **Jetty** și **WildFly**. Servletul său primește cereri de la **Jetty**, comunică cu **WildFly** și returnează rezultatul.
+
+#### Exemple de utilizare:
+- **Cerere validă:**  
+  Tomcat primește răspunsul de la **WildFly** și îl trimite înapoi către **Jetty**:
+```
+And Tomcat received a message from WildFly: 
+Hello, all! This is WildFly :) 
+```
+
+### WildFly
+**WildFly** este ultimul punct din lanțul de cereri. Răspunsul său este static și reprezintă rezultatul final procesat de aplicație.
+
+Exemplu de răspuns:
+```
+Hello, all! This is WildFly :) 
+```
 
 ---
 
-### Exemple de utilizare
-- **Exemplu reușit:**
-    - Cererea trimisă către Tomcat este procesată, iar răspunsul final de la Jetty ajunge la utilizator prin WildFly.
-    - Răspuns așteptat:
-      ```
-      Jetty received from WildFly: Tomcat says hello!
-      ```
+## Procesul de implementare
 
-- **Contraexemplu (eșec):**
-    - WildFly este oprit sau inaccesibil. Rezultatul din Tomcat indică eroare de rețea:
-      ```
-      Error: Could not connect to WildFly.
-      ```
+### Construirea imaginilor
+Imaginile Docker sunt generate folosind scripturi dedicate care:
+1. Construiesc proiectul folosind Maven.
+2. Copiază fișierele `.war` în locația specificată de Dockerfile pentru fiecare server.
+3. Etichetează imaginile pentru a putea fi utilizate în Kubernetes.
+
+### Lansarea aplicației
+După construirea imaginilor, Kubernetes este utilizat pentru a lansa modulele într-un mediu orchestrat. Resursele Kubernetes sunt definite astfel încât modulele să poată comunica între ele folosind DNS intern.
 
 ---
 
-## Observații și concluzii
+## Testare și validare
 
-### Observații:
-- Arhitectura modulară facilitează depanarea și extinderea aplicației.
-- Comunicarea între module este flexibilă datorită utilizării DNS-ului Kubernetes și a claselor Java standard.
+Testarea aplicației este automatizată printr-un script (`test.sh`) care verifică:
+1. Starea podurilor Kubernetes.
+2. Funcționarea fluxului complet al aplicației:
+    - Jetty → Tomcat → WildFly.
 
-### Concluzii:
-Acest proiect demonstrează cum pot fi integrate diferite servere de aplicații într-un mediu containerizat, folosind tehnologii moderne precum Docker și Kubernetes. Soluția este extensibilă și oferă o bază solidă pentru dezvoltări ulterioare.
+Exemple de utilizare:
+- Răspuns valid:  
+  Utilizatorul primește răspunsul final compus de la toate modulele.
+- Eroare:  
+  Dacă unul dintre module nu este disponibil, scriptul va afișa mesajele corespunzătoare.
+
+---
+
+## Îmbunătățiri propuse
+
+1.	**Tratamentul erorilor:**
+Deși aplicația gestionează erorile principale, se pot adăuga mesaje mai detaliate și logare centralizată pentru a facilita depanarea.
+2.	**Expunere publică limitată:**
+Jetty ar trebui expus permanent pe un ip public. Această schimbare este posibilă folosind un Ingress care mapează cererile externe direct la serviciul Jetty. Aceasta ar crește securitatea și ar limita suprafața de atac.
+3.	**Scalabilitate:**
+Modulele pot fi scalate orizontal, adăugând replici pentru a gestiona un număr mai mare de cereri.
+
+---
+
+## Concluzie
+
+Acest proiect demonstrează cum tehnologiile **Docker** și **Kubernetes** pot fi utilizate pentru a crea o arhitectură distribuită, modulară și scalabilă. Integrarea eficientă între modulele Jetty, Tomcat și WildFly asigură un flux clar și extensibil. Prin utilizarea unui design bine definit, soluția este ușor de înțeles, implementat și extins pentru cerințe viitoare.
