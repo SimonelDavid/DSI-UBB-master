@@ -1,0 +1,3 @@
+FROM quay.io/wildfly/wildfly
+
+COPY servlet-wildfly/target/servlet-wildfly-1.0-SNAPSHOT.war /opt/jboss/wildfly/standalone/deployments/

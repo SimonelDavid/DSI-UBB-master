@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jetty-deployment
+  namespace: tpjad-hw1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jetty
+  template:
+    metadata:
+      labels:
+        app: jetty
+    spec:
+      containers:
+        - name: jetty
+          image: jetty-custom:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jetty-service
+  namespace: tpjad-hw1
+spec:
+  selector:
+    app: jetty
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8080
+  type: ClusterIP

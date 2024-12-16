@@ -1,0 +1,43 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Moștenire din proiectul principal -->
+    <parent>
+        <groupId>com.example</groupId>
+        <artifactId>tpjad-hw1</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <!-- Artefactul acestui modul -->
+    <artifactId>servlet-tomcat</artifactId>
+    <packaging>war</packaging>
+
+    <name>Servlet Tomcat Module</name>
+    <description>A Tomcat Servlet for the TPJAD HW1 project.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- Configurarea build-ului -->
+    <build>
+        <finalName>servlet-tomcat</finalName>
+        <plugins>
+            <!-- Plugin pentru generarea fișierelor WAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <!-- Permite lipsa unui web.xml complet dacă folosim adnotări -->
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

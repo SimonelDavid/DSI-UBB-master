@@ -1,0 +1,7 @@
+FROM jetty:11.0-jdk17
+
+COPY servlet-jetty/target/servlet-jetty.war /var/lib/jetty/webapps/servlet-jetty.war
+
+COPY servlet-jetty/src/main/resources/jetty-logging.properties /var/lib/jetty/resources/jetty-logging.properties
+
+CMD ["java", "-Djava.util.logging.config.file=/var/lib/jetty/resources/jetty-logging.properties", "-jar", "/usr/local/jetty/start.jar"]

@@ -1,0 +1,44 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Informații despre proiectul principal -->
+  <groupId>com.example</groupId>
+  <artifactId>tpjad-hw1</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>TPJAD HW1 Parent Project</name>
+  <description>Parent POM for the TPJAD HW1 project</description>
+
+  <!-- Listarea modulelor -->
+  <modules>
+    <module>servlet-tomcat</module>
+    <module>servlet-wildfly</module>
+    <module>servlet-jetty</module>
+  </modules>
+
+  <!-- Gestionarea dependențelor comune -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>4.0.1</version>
+        <scope>provided</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <!-- Configurarea build-ului global -->
+  <build>
+    <pluginManagement>
+      <plugins>
+        <!-- Plugin pentru WAR -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>3.3.2</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>
